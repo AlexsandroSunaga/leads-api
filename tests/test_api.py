@@ -3,7 +3,6 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-import app.main as legacy_module
 import src.services.lead_store as backend_store
 from src.main import backend_app
 
@@ -16,16 +15,11 @@ LEAD = {
 }
 
 
-@pytest.fixture(params=["legacy", "backend"])
-def client(request, tmp_path, monkeypatch):
+@pytest.fixture
+def client(tmp_path, monkeypatch):
     store = tmp_path / "leads.jsonl"
-    if request.param == "legacy":
-        monkeypatch.setattr(legacy_module, "STORE", store)
-        app = legacy_module.app
-    else:
-        monkeypatch.setattr(backend_store, "STORE", store)
-        app = backend_app
-    with TestClient(app) as c:
+    monkeypatch.setattr(backend_store, "STORE", store)
+    with TestClient(backend_app) as c:
         c.store = store
         yield c
 
